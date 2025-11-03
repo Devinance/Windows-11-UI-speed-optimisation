@@ -1,106 +1,119 @@
 # Windows 11 UI Speed Optimizer
 
-A small, focused PowerShell script to improve Windows 11 UI responsiveness by applying a set of registry and power-plan changes. The script creates safe, timestamped backups before making changes and includes a restore workflow and logs.
+> Lightweight PowerShell tool to improve Windows 11 UI responsiveness — safe backups, restore workflow, and helpful logs.
 
-## At a glance
+[![Platform](https://img.shields.io/badge/platform-Windows%2011-blue.svg)](https://www.microsoft.com)
+[![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)](https://docs.microsoft.com/powershell)
 
-- Script: `optimization.ps1` (requires Administrator/elevated PowerShell)
-- Purpose: Reduce UI animation delays, disable non-essential effects, and set a performance-oriented power plan
-- Backup: Automatic timestamped backups (JSON metadata + exported `.reg` files)
-- Logs: Session logs saved under `%LOCALAPPDATA%\Win11-UI-Optimizer\Logs`
+---
 
-## Requirements
+## Table of contents
 
-- Windows 11 (build 22000 or later) — script performs a compatibility check and will warn if not running on Win11.
-- PowerShell 5.1+ (the script uses the `#requires -Version 5.1` directive)
-- Must run as Administrator (elevation required) — the script enforces this and will exit if not elevated.
+- [Quick start](#quick-start)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Usage examples](#usage-examples)
+- [Where backups & logs live](#where-backups--logs-live)
+- [What changes are applied](#what-changes-are-applied)
+- [Troubleshooting](#troubleshooting)
+- [Contributing & license](#contributing--license)
+- [Links](#links)
 
-## Files of interest
+---
 
-- `optimization.ps1` — main interactive script (apply, restore, status, backup management)
-- `CHANGELOG.md`, `OPTIMIZATION_GUIDE.md`, `QUICK_REFERENCE.md` — repository documentation
+## Quick start
 
-## Important safety notes
-
-- The script creates a backup of any registry values it will modify before applying tweaks. Backups are saved to `%LOCALAPPDATA%\Win11-UI-Optimizer\Backups` in timestamped folders (e.g. `backup_20251103_153045`).
-- A system restart is recommended after applying or restoring settings for all changes to take full effect.
-- While some changes may work on Windows 10, the script is designed for Windows 11 and may not be fully compatible on earlier OS versions.
-
-## Usage
-
-Open an elevated PowerShell (Run as Administrator) and run either from the current directory or by providing a full path to the script.
-
-Example (current directory):
+1. Open an elevated PowerShell (Run as Administrator).
+2. Change to the repository folder (or provide a full path) and run the script.
 
 ```powershell
-# From PowerShell (Windows PowerShell / pwsh)
+# From an elevated PowerShell
 Set-Location -Path 'C:\path\to\Windows-11-UI-speed-optimisation'
 pwsh.exe -ExecutionPolicy Bypass -File .\optimization.ps1
 ```
 
-You can pass the script parameters directly:
+Tip: pass `-VerboseMode` to see extra debug output. Use `-MaxBackups <n>` to change how many backups are retained (default: 10).
+
+## Features
+
+- Interactive menu: apply tweaks, restore, view status, manage backups, view logs
+- Automatic timestamped backups (JSON metadata + exported .reg files)
+- Backup integrity verification
+- Session logging (local %LOCALAPPDATA% path)
+- Attempts to set a high-performance power plan when optimizing
+
+## Requirements
+
+- Windows 11 (build 22000+) — the script checks the OS and warns if not running on Win11
+- PowerShell 5.1 or newer
+- Must run with Administrator privileges (the script will exit if not elevated)
+
+## Usage examples
+
+Run with verbose logging and keep up to 20 backups:
 
 ```powershell
-# Enable verbose mode and set max backups to retain
 pwsh.exe -ExecutionPolicy Bypass -File .\optimization.ps1 -VerboseMode -MaxBackups 20
 ```
 
-Notes on parameters found in the script:
+Run non-interactively (not recommended) — the script is designed to be interactive. It's safest to use the menu.
 
-- `-VerboseMode` (switch): Enable more detailed logging output to console and log file.
-- `-MaxBackups <int>`: Maximum number of backups to retain (default: 10). Range validated between 1 and 100.
+Menu options you'll see:
 
-The script will present an interactive menu with options to:
-- Apply optimization tweaks (creates backup first)
-- Restore previous settings (choose from backups)
-- View current optimization status
-- Manage backups
-- View logs
+- Apply optimization tweaks (creates a backup first)
+- Restore previous settings from a timestamped backup
+- View current optimization status (shows which settings already match target)
+- Manage backups (list, inspect, prune)
+- View logs (opens the current session log when available)
 
-## Where backups and logs are stored
+## Where backups & logs live
 
-- Backups: `%LOCALAPPDATA%\Win11-UI-Optimizer\Backups` (each backup folder contains `backup.json` and exported `.reg` files)
-- Logs: `%LOCALAPPDATA%\Win11-UI-Optimizer\Logs` (session logs named like `optimizer_YYYYMMDD_HHMMSS.log`)
+- Backups: `%LOCALAPPDATA%\\Win11-UI-Optimizer\\Backups`
+	- Each backup folder: `backup_YYYYMMDD_HHMMSS`
+	- Contains `backup.json` (metadata) and exported `.reg` files for registry keys
+- Logs: `%LOCALAPPDATA%\\Win11-UI-Optimizer\\Logs`
+	- Named like `optimizer_YYYYMMDD_HHMMSS.log`
 
-## What the script changes (high-level)
+## What changes are applied (high level)
 
-The script contains a curated list of registry tweaks such as:
-- Reducing `MenuShowDelay` for faster menus
-- Disabling window and taskbar animations
-- Disabling transparency effects
-- Reducing startup delays
-- Setting visual effects to favor performance
+The script applies a curated set of registry tweaks intended to make the UI feel snappier:
 
-All modifications are recorded in the backup metadata and can be restored by the included restore workflow.
+- Reduce `MenuShowDelay` for faster menu opening
+- Disable minimize/restore and taskbar animations
+- Disable transparency effects
+- Turn off various Start/menu suggestions and background app behaviors
+- Reduce startup delay (where supported)
+- Set Visual Effects to prioritize performance
+
+All modified values are recorded in the backup metadata so they can be restored.
 
 ## Troubleshooting
 
-- "Not elevated" / permission errors: Re-run PowerShell as Administrator.
-- If a backup fails or is invalid, check the log file under `%LOCALAPPDATA%\Win11-UI-Optimizer\Logs` for details.
-- If power plan restore fails, confirm the target power plan still exists on the system (some plans may not be present on all SKUs).
+- Not elevated / permission errors: re-launch PowerShell as Administrator.
+- Backups fail or are invalid: check the session log under `%LOCALAPPDATA%\\Win11-UI-Optimizer\\Logs`.
+- Power plan restore fails: some power schemes are not available on every OS SKU — the script will warn if it can't restore the exact plan.
 
-## Contributing
+## Contributing & license
 
-Small fixes, documentation improvements, or additional safe tweaks are welcome. Consider opening an issue or a pull request. If you add new registry tweaks, include:
-- FriendlyName
-- Hive (HKCU/HKLM)
-- Path and Name
-- DesiredValue and Type
+Contributions welcome. For adding new tweaks, follow the existing `PSCustomObject` entries in `optimization.ps1` and include:
 
-## License & attribution
+- `FriendlyName`, `Hive` (HKCU/HKLM), `Path`, `Name`, `DesiredValue`, `Type`
 
-This repository does not include an explicit license file. If you intend to publish this on GitHub, add a `LICENSE` file (for example MIT) to clarify reuse terms.
+This repository currently has no license file. If you plan to publish it on GitHub, consider adding a `LICENSE` (MIT is a common choice).
 
 ## Links
 
-- CHANGELOG: `CHANGELOG.md`
-- Optimization Guide: `OPTIMIZATION_GUIDE.md`
-- Quick Reference: `QUICK_REFERENCE.md`
+- `optimization.ps1` — main script
+- `CHANGELOG.md` — changes and release notes
+- `OPTIMIZATION_GUIDE.md` — deeper explanation of tweaks and rationale
+- `QUICK_REFERENCE.md` — short usage notes
 
 ---
 
-If you'd like, I can also:
-- Add a separate `CONTRIBUTING.md` with a brief developer guide
-- Add example screenshots or a short GIF showing the menu
-- Add a `LICENSE` file (suggest MIT) and populate repository metadata for GitHub releases
+If you want, I can also:
+
+- Add a `CONTRIBUTING.md` and a minimal `LICENSE` (MIT) file
+- Add a GitHub Actions workflow that runs `Invoke-ScriptAnalyzer` as a lint step
+- Add a short GIF/screenshot for the README header
+
 
