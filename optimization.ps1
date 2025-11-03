@@ -1,3 +1,4 @@
+
 #requires -Version 5.1
 #requires -RunAsAdministrator
 
@@ -375,7 +376,7 @@ function Get-RegistryValue {
     }
 }
 
-function Ensure-RegistryValue {
+function Set-RegistryValue {
     param(
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -948,7 +949,7 @@ function Restore-RegistryValues {
             if ($item.Exists) {
                 $typeToUse = if ([string]::IsNullOrEmpty($item.ValueKind)) { 'String' } else { $item.ValueKind }
                 $valueToRestore = ConvertTo-RegistryValue -Type $typeToUse -Value $item.Value
-                Ensure-RegistryValue -Hive $item.Hive -Path $item.Path -Name $item.Name -Type $typeToUse -Value $valueToRestore
+                Set-RegistryValue -Hive $item.Hive -Path $item.Path -Name $item.Name -Type $typeToUse -Value $valueToRestore
                 Write-SuccessMessage "Restored: $($item.FriendlyName)"
                 $successCount++
             } else {
@@ -977,7 +978,7 @@ function Apply-RegistryTweaks {
     
     foreach ($tweak in $Script:RegistryTweaks) {
         try {
-            Ensure-RegistryValue -Hive $tweak.Hive -Path $tweak.Path -Name $tweak.Name -Type $tweak.Type -Value $tweak.DesiredValue
+            Set-RegistryValue -Hive $tweak.Hive -Path $tweak.Path -Name $tweak.Name -Type $tweak.Type -Value $tweak.DesiredValue
             Write-SuccessMessage "Applied: $($tweak.FriendlyName)"
             $successCount++
         } catch {
